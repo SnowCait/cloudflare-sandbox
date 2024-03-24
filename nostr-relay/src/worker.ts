@@ -1,3 +1,4 @@
+import { Event, Filter } from 'nostr-tools';
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
  *
@@ -7,6 +8,7 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+const eventsStore: Event[] = [];
 
 export interface Env {
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -38,6 +40,42 @@ export default {
 		server.accept();
 		server.addEventListener('message', async (e) => {
 			console.log(e.data);
+			try {
+				const [type, arg1, ...filters]: [string, string | Event, ...Filter[]] = JSON.parse(e.data as string);
+				switch (type) {
+					case 'EVENT': {
+						if (typeof arg1 !== 'object') {
+							throw new Error('Invalid EVENT');
+						}
+						eventsStore.unshift(arg1);
+						server.send(JSON.stringify(['OK', arg1.id, true, '']));
+						break;
+					}
+					case 'REQ': {
+						console.log('[filters]', filters);
+
+						if (filters.length === 0) {
+							throw new Error('Invalid REQ');
+						}
+
+						const maxLimit = 5;
+						const limit = Math.min(filters[0].limit ?? maxLimit, maxLimit);
+
+						const events = eventsStore.slice(0, limit);
+						console.log('[events]', events.length, eventsStore.length);
+
+						for (const event of events) {
+							server.send(JSON.stringify(['EVENT', event]));
+						}
+
+						server.send(JSON.stringify(['EOSE', arg1]));
+						break;
+					}
+				}
+			} catch (error) {
+				console.error(error);
+				server.send(JSON.stringify(['NOTICE', '']));
+			}
 		});
 
 		return new Response(null, {
