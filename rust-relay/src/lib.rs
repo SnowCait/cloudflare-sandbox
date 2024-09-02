@@ -2,6 +2,7 @@ use futures::StreamExt;
 use nostr::{
     message::{ClientMessage, RelayMessage},
     util::JsonUtil,
+    secp256k1::Secp256k1,
 };
 use worker::*;
 
@@ -21,6 +22,8 @@ async fn fetch(_req: Request, _env: Env, _ctx: Context) -> Result<Response> {
     wasm_bindgen_futures::spawn_local(async move {
         let mut event_stream = server.events().expect("could not open stream");
 
+        let secp = Secp256k1::new();
+
         while let Some(event) = event_stream.next().await {
             match event.expect("received error in websocket") {
                 WebsocketEvent::Message(msg) => {
@@ -28,7 +31,7 @@ async fn fetch(_req: Request, _env: Env, _ctx: Context) -> Result<Response> {
                     let json = msg.text().expect("invalid json");
                     let message = ClientMessage::from_json(json).expect("json parse error");
                     match message {
-                        ClientMessage::Event(event) => match event.verify() {
+                        ClientMessage::Event(event) => match event.verify_with_ctx(&secp) {
                             Ok(_) => {
                                 let ok = RelayMessage::ok(event.id, true, "");
                                 server.send_with_str(ok.as_json()).expect("send error");
