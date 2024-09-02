@@ -1,8 +1,8 @@
 [package]
+authors = ["SnowCait <SnowCait@users.noreply.github.com>"]
+edition = "2021"
 name = "rust-relay"
 version = "0.1.0"
-edition = "2021"
-authors = [ "SnowCait <SnowCait@users.noreply.github.com>" ]
 
 [package.metadata.release]
 release = false
@@ -15,8 +15,8 @@ wasm-opt = false
 crate-type = ["cdylib"]
 
 [dependencies]
-worker = { version="0.3.4" }
-worker-macros = { version="0.3.4" }
-console_error_panic_hook = { version = "0.1.1" }
+console_error_panic_hook = {version = "0.1.1"}
 futures = "0.3.30"
-nostr = "0.34.1"
+nostr = {version = "0.34.1", default-features = false, features = ["std"]}
+worker = {version = "0.3.4"}
+worker-macros = {version = "0.3.4"}
