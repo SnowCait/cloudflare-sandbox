@@ -6,6 +6,15 @@ export interface Env {
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		if (request.headers.get('Accept') === 'application/nostr+json') {
+			const nip11 = {
+				name: 'Nostr Relay Sandbox',
+			};
+			return new Response(JSON.stringify(nip11), {headers: {
+				'Access-Control-Allow-Origin': '*'
+			}});
+		}
+
 		const upgradeHeader = request.headers.get('Upgrade');
 		if (!upgradeHeader || upgradeHeader !== 'websocket') {
 			return new Response('Expected Upgrade: websocket', { status: 426 });
