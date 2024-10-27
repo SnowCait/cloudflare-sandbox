@@ -10,9 +10,11 @@ export default {
 			const nip11 = {
 				name: 'Nostr Relay Sandbox',
 			};
-			return new Response(JSON.stringify(nip11), {headers: {
-				'Access-Control-Allow-Origin': '*'
-			}});
+			return new Response(JSON.stringify(nip11), {
+				headers: {
+					'Access-Control-Allow-Origin': '*'
+				}
+			});
 		}
 
 		const upgradeHeader = request.headers.get('Upgrade');
