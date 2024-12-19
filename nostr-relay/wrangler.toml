@@ -7,6 +7,10 @@ binding = "DB" # i.e. available in your Worker on env.DB
 database_id = "c404658b-0076-4e16-b4fb-547b127218a1"
 database_name = "nostr-relay"
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
