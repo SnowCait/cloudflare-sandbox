@@ -9,6 +9,12 @@ export class WebSocketServer extends DurableObject {
 
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
+
+		for (const ws of this.ctx.getWebSockets()) {
+			const subscriptions = ws.deserializeAttachment();
+			console.debug('[restore]', ws, subscriptions)
+			this.#subscriptions.set(ws, new Map(subscriptions))
+		}
 	}
 
 	async fetch(request: Request): Promise<Response> {
@@ -82,6 +88,7 @@ export class WebSocketServer extends DurableObject {
 					} else {
 						subscriptions.set(subscriptionId, filter);
 						this.#subscriptions.set(ws, subscriptions);
+						server.serializeAttachment(subscriptions)
 					}
 
 					const wheres = [];
@@ -144,6 +151,7 @@ export class WebSocketServer extends DurableObject {
 	}
 
 	async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean): Promise<void> {
+		console.debug('[close]', ws, code, reason)
 		ws.close(code, reason);
 	}
 }
