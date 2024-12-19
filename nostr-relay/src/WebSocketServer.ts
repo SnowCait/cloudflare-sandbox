@@ -1,9 +1,12 @@
 import { DurableObject } from "cloudflare:workers";
-import { Event, Filter, verifyEvent } from 'nostr-tools';
+import { Event, Filter, matchFilter, verifyEvent } from 'nostr-tools';
 import { Env } from "./env";
 import { deleteEvent } from "./Delete";
+import { RelaySubscriptions } from "./Relay";
 
 export class WebSocketServer extends DurableObject {
+	#subscriptions = new Map<WebSocket, RelaySubscriptions>();
+
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
 	}
@@ -12,6 +15,8 @@ export class WebSocketServer extends DurableObject {
 		const webSocketPair = new WebSocketPair();
 		const {0:client, 1:server} = webSocketPair;
 		this.ctx.acceptWebSocket(server);
+
+		this.#subscriptions.set(server, new Map())
 
 		return new Response(null, {
 			status: 101,
@@ -44,6 +49,16 @@ export class WebSocketServer extends DurableObject {
 					}
 					// server.send(JSON.stringify(['OK', event.id, true, meta.changed_db ? '': 'duplicate: already have this event']));
 					server.send(JSON.stringify(['OK', event.id, true, '']));
+
+					// Broadcast
+					console.debug('[broadcast]', this.#subscriptions.size)
+					for (const [_server, subscriptions] of this.#subscriptions) {
+						for (const [id, filter] of subscriptions) {
+							if (matchFilter(filter, event)) {
+								_server.send(JSON.stringify(['EVENT', id, event]))
+							}
+						}
+					}
 					break;
 				}
 				case 'REQ': {
@@ -59,6 +74,16 @@ export class WebSocketServer extends DurableObject {
 					const limit = Math.min(filters[0].limit ?? maxLimit, maxLimit);
 
 					const filter = filters[0];
+
+					const subscriptions = this.#subscriptions.get(ws)
+					if (subscriptions === undefined) {
+						server.send(JSON.stringify(['NOTICE', 'internal server error']));
+						return;
+					} else {
+						subscriptions.set(subscriptionId, filter);
+						this.#subscriptions.set(ws, subscriptions);
+					}
+
 					const wheres = [];
 					const values: (string | number)[] = [];
 
@@ -106,7 +131,6 @@ export class WebSocketServer extends DurableObject {
 					}
 
 					server.send(JSON.stringify(['EOSE', subscriptionId]));
-					server.send(JSON.stringify(['CLOSED', subscriptionId, 'unsupported: subscribing future events'])); // Temporary
 					break;
 				}
 				case 'CLOSE': {
