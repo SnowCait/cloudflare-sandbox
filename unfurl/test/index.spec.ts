@@ -5,7 +5,7 @@ const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
 describe('unfurl', () => {
 	it('responds with JSON', async () => {
-		const request = new IncomingRequest('http://example.com/?url=https://example.com/');
+		const request = new IncomingRequest('https://example.com/?url=https://example.com/');
 		const response = await worker.fetch(request);
 		expect(await response.json()).toMatchObject({
 			title: 'Example Domain',
