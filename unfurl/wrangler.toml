@@ -1,8 +1,8 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "unfurl"
-main = "src/index.ts"
 compatibility_date = "2025-01-09"
 compatibility_flags = ["nodejs_compat"]
+main = "src/index.ts"
+name = "unfurl-sandbox"
 
 # Workers Logs
 # Docs: https://developers.cloudflare.com/workers/observability/logs/workers-logs/
