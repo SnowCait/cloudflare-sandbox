@@ -5,7 +5,7 @@ export { type Env, WebSocketServer };
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		console.debug('[request headers]', request.headers);
+		console.debug('[request headers]', JSON.stringify(request.headers, null, 2));
 		if (request.headers.get('Accept') === 'application/nostr+json') {
 			const nip11 = {
 				name: 'Nostr Relay Sandbox',
