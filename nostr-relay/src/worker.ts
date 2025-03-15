@@ -1,21 +1,19 @@
 import { Env } from './env';
 import { WebSocketServer } from './WebSocketServer';
 
-export {
-	type Env,
-	WebSocketServer
-}
+export { type Env, WebSocketServer };
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		console.debug('[request headers]', request.headers);
 		if (request.headers.get('Accept') === 'application/nostr+json') {
 			const nip11 = {
 				name: 'Nostr Relay Sandbox',
 			};
 			return new Response(JSON.stringify(nip11), {
 				headers: {
-					'Access-Control-Allow-Origin': '*'
-				}
+					'Access-Control-Allow-Origin': '*',
+				},
 			});
 		}
 
