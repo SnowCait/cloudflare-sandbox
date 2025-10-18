@@ -11,5 +11,8 @@
 	"devDependencies": {
 		"typescript": "^5.5.2",
 		"wrangler": "^4.33.1"
+	},
+	"dependencies": {
+		"@octokit/rest": "^22.0.0"
 	}
 }

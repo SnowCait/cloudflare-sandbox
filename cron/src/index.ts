@@ -15,6 +15,8 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { Octokit } from '@octokit/rest';
+
 export default {
 	async fetch(req) {
 		const url = new URL(req.url);
@@ -26,15 +28,22 @@ export default {
 	// The scheduled handler is invoked at the interval set in our wrangler.jsonc's
 	// [[triggers]] configuration.
 	async scheduled(event, env, ctx): Promise<void> {
-		// A Cron Trigger can make requests to other endpoints on the Internet,
-		// publish to a Queue, query a D1 Database, and much more.
-		//
-		// We'll keep it simple and make an API call to a Cloudflare API:
-		let resp = await fetch('https://api.cloudflare.com/client/v4/ips');
-		let wasSuccessful = resp.ok ? 'success' : 'fail';
+		const excludeRepositories: string[] = env.EXCLUDE_REPOSITORIES;
+		const octokit = new Octokit();
 
-		// You could store this result in KV, write to a D1 Database, or publish to a Queue.
-		// In this template, we'll just log the result:
-		console.log(`trigger fired at ${event.cron}: ${wasSuccessful}`);
+		const limit = await octokit.rateLimit.get();
+		console.log(limit.data);
+
+		const search = await octokit.search.repos({ q: 'topic:nostr', sort: 'updated', order: 'desc' });
+		console.log(search.data.total_count);
+
+		for (const repository of search.data.items.filter((repo) => !excludeRepositories.includes(repo.full_name)).slice(0, 5)) {
+			const commit = await octokit.repos.getCommit({
+				owner: repository.owner?.login ?? '',
+				repo: repository.name,
+				ref: repository.default_branch,
+			});
+			console.log(`[${repository.full_name}]`, commit.data.commit.message, commit.data.html_url);
+		}
 	},
 } satisfies ExportedHandler<Env>;

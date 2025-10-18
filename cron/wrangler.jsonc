@@ -25,7 +25,16 @@
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	// "vars": { "MY_VARIABLE": "production_value" }
+	"vars": {
+		"RELAYS": [
+			"wss://nos.lol/",
+			"wss://relay.nostr.band/",
+			"wss://relay.damus.io/"
+		],
+		"EXCLUDE_REPOSITORIES": [
+			// "sesseor/nostr-relays-list"
+		]
+	},
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
@@ -42,7 +51,7 @@
 	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 	"triggers": {
 		"crons": [
-			"* * * * *"
+			"0 * * * *"
 		]
 	}
 }
